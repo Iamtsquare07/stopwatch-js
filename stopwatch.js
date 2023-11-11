@@ -1,10 +1,13 @@
-let isRunning = false;
-let startTime;
-let lapStartTime;
-let elapsedPausedTime = 0;
-let laps = [];
 const lapList = document.getElementById("lapList");
 const resetBtn = document.getElementById("reset");
+
+// Load data from local storage on page load
+const storedData = JSON.parse(localStorage.getItem("stopwatchData")) || {};
+let isRunning = storedData.isRunning || false,
+startTime = storedData.startTime || null,
+lapStartTime = storedData.lapStartTime || null,
+elapsedPausedTime = storedData.elapsedPausedTime || 0,
+laps = storedData.laps || [];
 
 function startStop() {
   if (isRunning) {
@@ -15,6 +18,7 @@ function startStop() {
 }
 
 function start() {
+  addBeforeUnloadWarning()
   if (!isRunning) {
     isRunning = true;
     startTime = Date.now() - elapsedPausedTime;
@@ -23,16 +27,19 @@ function start() {
     document.getElementById("startStopBtn").innerText = "Stop";
     resetBtn.innerText = "Reset";
     resetBtn.style.display = "block";
+    saveDataToLocalStorage();
   }
 }
 
 function stop() {
+  removeBeforeUnloadWarning()
   if (isRunning) {
     isRunning = false;
     elapsedPausedTime = Date.now() - startTime;
     lapStartTime = null;
     document.getElementById("startStopBtn").innerText = "Resume";
     resetBtn.innerText = "Reset";
+    saveDataToLocalStorage();
   }
 }
 
@@ -47,6 +54,7 @@ function setLap() {
 
     // Update lap list
     updateLapList();
+    saveDataToLocalStorage();
   }
 }
 
@@ -55,6 +63,7 @@ function update() {
     const elapsedTime = Date.now() - startTime;
     document.getElementById("output").innerText = formatTime(elapsedTime);
     requestAnimationFrame(update);
+    saveDataToLocalStorage();
   }
 }
 
@@ -79,6 +88,7 @@ function updateLapList() {
 }
 
 function reset() {
+  removeBeforeUnloadWarning()
   if (isRunning) {
     stop();
   }
@@ -90,6 +100,64 @@ function reset() {
   document.getElementById("startStopBtn").innerText = "Start";
   document.getElementById("output").innerText = "00:00:00";
   resetBtn.style.display = "none";
+
+  // Clear data from local storage
+  localStorage.removeItem("stopwatchData");
 }
 
 resetBtn.addEventListener("click", reset);
+
+function saveDataToLocalStorage() {
+  // Save relevant data to local storage
+  const dataToSave = {
+    isRunning,
+    startTime,
+    lapStartTime,
+    elapsedPausedTime,
+    laps,
+  };
+  localStorage.setItem("stopwatchData", JSON.stringify(dataToSave));
+}
+
+function loadDataFromLocalStorage() {
+  const storedData = JSON.parse(localStorage.getItem("stopwatchData")) || {};
+
+  if (storedData.startTime) {
+    elapsedPausedTime = storedData.elapsedPausedTime || 0;
+    startTime = Date.now() - elapsedPausedTime;
+    isRunning = storedData.isRunning || false;
+    lapStartTime = storedData.lapStartTime || null;
+    laps = storedData.laps || [];
+
+    if (isRunning) {
+      start();
+    } else {
+      const elapsedTime = Date.now() - startTime;
+      document.getElementById("output").innerText = formatTime(elapsedTime);
+      document.getElementById("startStopBtn").innerText = "Resume";
+      resetBtn.innerText = "Reset";
+      resetBtn.style.display = "block";
+    }
+
+    // Display previous laps
+    updateLapList();
+  }
+}
+
+window.addEventListener("load", loadDataFromLocalStorage);
+
+function addBeforeUnloadWarning() {
+  // Add the beforeunload event listener
+  window.addEventListener("beforeunload", beforeUnloadHandler);
+}
+
+function removeBeforeUnloadWarning() {
+  // Remove the beforeunload event listener
+  window.removeEventListener("beforeunload", beforeUnloadHandler);
+}
+
+function beforeUnloadHandler(e) {
+  e.preventDefault();
+  e.returnValue =
+    "You have unsaved changes. Are you sure you want to leave this page?";
+}
