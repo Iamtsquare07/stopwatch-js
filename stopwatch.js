@@ -88,6 +88,8 @@ function reset() {
   startTime = null;
   lapStartTime = null;
   elapsedPausedTime = 0;
+  document.getElementById("startStopBtn").innerText = "Start";
+  document.getElementById("output").innerText = "00:00:00";
   if (isRunning) {
     stop();
   }
