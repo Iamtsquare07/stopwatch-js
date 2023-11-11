@@ -1,7 +1,7 @@
 let isRunning = false;
 let startTime;
 let lapStartTime;
-let elapsedPausedTime = 0; // Track elapsed time when paused
+let elapsedPausedTime = 0;
 let laps = [];
 const lapList = document.getElementById("lapList");
 const resetBtn = document.getElementById("reset");
@@ -15,41 +15,37 @@ function startStop() {
 }
 
 function start() {
-  isRunning = true;
-  startTime = Date.now() - elapsedPausedTime - (lapStartTime || 0);
-  lapStartTime = Date.now();
-  update();
-  document.getElementById("startStopBtn").innerText = "Stop";
-  resetBtn.innerText = "Reset";
-  resetBtn.style.display = "block";
+  if (!isRunning) {
+    isRunning = true;
+    startTime = Date.now() - elapsedPausedTime;
+    lapStartTime = Date.now();
+    update();
+    document.getElementById("startStopBtn").innerText = "Stop";
+    resetBtn.innerText = "Reset";
+    resetBtn.style.display = "block";
+  }
 }
 
 function stop() {
-  isRunning = false;
-  elapsedPausedTime += Date.now() - startTime;
-  lapStartTime = null;
-  document.getElementById("startStopBtn").innerText = "Resume";
-  resetBtn.innerText = "Reset";
+  if (isRunning) {
+    isRunning = false;
+    elapsedPausedTime = Date.now() - startTime;
+    lapStartTime = null;
+    document.getElementById("startStopBtn").innerText = "Resume";
+    resetBtn.innerText = "Reset";
+  }
 }
 
-function lapReset() {
+function setLap() {
   if (isRunning) {
+    // Update lap start time before recording lap time
+    lapStartTime = Date.now();
+
     // Record lap time
-    const lapTime = Date.now() - lapStartTime;
+    const lapTime = lapStartTime - startTime;
     laps.push(formatTime(lapTime));
 
     // Update lap list
-    updateLapList();
-
-    // Update lap start time
-    lapStartTime = Date.now();
-  } else {
-    // Reset the stopwatch
-    startTime = null;
-    lapStartTime = null;
-    elapsedPausedTime = 0;
-    laps = [];
-    document.getElementById("output").innerText = formatTime(0);
     updateLapList();
   }
 }
@@ -83,6 +79,9 @@ function updateLapList() {
 }
 
 function reset() {
+  if (isRunning) {
+    stop();
+  }
   laps = [];
   lapList.textContent = "";
   startTime = null;
@@ -90,9 +89,6 @@ function reset() {
   elapsedPausedTime = 0;
   document.getElementById("startStopBtn").innerText = "Start";
   document.getElementById("output").innerText = "00:00:00";
-  if (isRunning) {
-    stop();
-  }
   resetBtn.style.display = "none";
 }
 
