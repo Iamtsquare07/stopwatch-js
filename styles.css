@@ -51,6 +51,17 @@ h2 {
     margin: 5px 0;
 }
 
+.reset-field {
+    height: 40px;
+    width: 20%;
+    margin: auto;
+    text-align: center;
+}
+
+#reset {
+    display: none;
+}
+
 button {
     border-radius: 5px;
     background-color: #877efc;
@@ -61,15 +72,12 @@ button {
 
 ::-webkit-scrollbar {
     width: 2px;
-    /* Width of the scrollbar */
 }
 
 /* Style the scrollbar thumb (the draggable part) */
 ::-webkit-scrollbar-thumb {
     background: #3551f185;
-    /* Color of the scrollbar thumb */
     border-radius: 6px;
-    /* Rounded corners of the thumb */
 }
 
 /* Style the scrollbar track when hovering over it */
